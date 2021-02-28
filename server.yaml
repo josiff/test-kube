@@ -1,47 +1,32 @@
----
-apiVersion: "apps/v1"
-kind: "Deployment"
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: "server-app"
-  namespace: "default"
-  labels:
-    app: "server-app"
+  name: server-deployment
 spec:
-  replicas: 3
   selector:
     matchLabels:
-      app: "server-app"
+      app: server-app
+  replicas: 2 # tells deployment to run 2 pods matching the template
   template:
     metadata:
       labels:
-        app: "server-app"
+        app: server-app
     spec:
       containers:
-      - name: "server-app-sha256-1"
-        image: "gcr.io/cobalt-bond-306109/server-app@sha256:33f50b61be1e8d50600f5bfcfb532209ebec22098811a2a252ccba1ef1200a9c"
-        ports:
+        - name: server-app
+          image: gcr.io/cobalt-bond-306109/server-app@sha256:33f50b61be1e8d50600f5bfcfb532209ebec22098811a2a252ccba1ef1200a9c
+          ports:
             - containerPort: 3000
 ---
-apiVersion: "autoscaling/v2beta1"
-kind: "HorizontalPodAutoscaler"
+kind: Service
+apiVersion: v1
 metadata:
-  name: "server-app-hpa-repb"
-  namespace: "default"
-  labels:
-    app: "server-app"
+  name: server-app
 spec:
-  scaleTargetRef:
-    kind: "Deployment"
-    name: "server-app"
-    apiVersion: "apps/v1"
-  minReplicas: 1
-  maxReplicas: 5
+  selector:
+    app: server-app
   ports:
     - protocol: TCP
       port: 3000
       targetPort: 3000
-  metrics:
-  - type: "LoadBalancer"
-    resource:
-      name: "cpu"
-      targetAverageUtilization: 3000
+  type: LoadBalancer #NodePort
